@@ -1,0 +1,23 @@
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# Node / tooling
+node_modules/
+npm-debug.log*
+pnpm-debug.log*
+
+# Local build artifacts
+dist/
+*.zip
+*.log
+
+# 旧文件名残留（重命名时被其他程序占用，删除该文件后可移除本行）
+TwRanking-Fix.js

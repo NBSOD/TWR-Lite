@@ -1,0 +1,53 @@
+name: check
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Locate userscript
+        id: locate
+        run: |
+          set -e
+          shopt -s nullglob
+          files=(*.user.js)
+          if [ ${#files[@]} -eq 0 ]; then
+            files=(*.js)
+          fi
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "::error::no userscript file found (*.user.js)"
+            exit 1
+          fi
+          echo "files=${files[*]}" >> "$GITHUB_OUTPUT"
+          echo "main=${files[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: node --check
+        run: |
+          set -e
+          for f in ${{ steps.locate.outputs.files }}; do
+            echo "→ $f"
+            node --check "$f"
+          done
+
+      - name: Check userscript metadata
+        run: |
+          set -e
+          f="${{ steps.locate.outputs.main }}"
+          for key in "@name" "@version" "@match" "@grant" "@run-at"; do
+            if ! grep -qE "^// ${key}([[:space:]]|$)" "$f"; then
+              echo "::error::missing userscript header: ${key}"
+              exit 1
+            fi
+          done
+          echo "metadata ok: $(grep -m1 '^// @version' "$f")"
